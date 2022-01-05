@@ -16,11 +16,20 @@ def run():
     startTime = datetime.datetime.now()
     print('start time: {}'.format(startTime))
     conn = pymysql.connect(host=host, user=user, password=password, db=dbname)
-    origDf = pd.read_sql('select * from s_002174 where dateTime >= "20160408" order by dateTime asc', conn)
+    codes = ['002174', '002460', '300122', '000725', '000100', '002047', '002699', '000665', '600847', '605289']
+    predictDays = 15
+    for i in range(len(codes)):
+        predict(conn, codes[i], predictDays)
     conn.close()
+    endTime = datetime.datetime.now()
+    print('end time: {}'.format(endTime))
+    print('total time: {}'.format(endTime - startTime))
+
+
+def predict(conn, code, predictDays):
+    origDf = pd.read_sql('select * from s_' + code + ' order by dateTime asc', conn)
     df = origDf[['startPrice', 'maxPrice', 'endPrice', 'diffPrice', 'diffPercent', 'turnoverAmount', 'amount',
                  'amplitude', 'turnoverPercent']]
-    predictDays = 10
     indexToRemoveInX = []
     indexToRemoveInY = []
     for i in range(predictDays):
@@ -49,10 +58,7 @@ def run():
         for j in range(lr.coef_.size):
             predictPrice = predictPrice + \
                            df.values[len(origDf) - i - 1][j] * lr.coef_[0][j]
-        print('day {} price: {}'.format(predictDays - i, predictPrice + c))
-    endTime = datetime.datetime.now()
-    print('end time: {}'.format(endTime))
-    print('total time: {}'.format(endTime - startTime))
+        print('stock {} day {} price: {}'.format(origDf[['stockName']].values[0][0], predictDays - i, predictPrice + c))
 
 
 # print(predictOfTestY)
