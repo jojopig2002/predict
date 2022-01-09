@@ -1,6 +1,7 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 import datetime
+import logging
 
 import pandas as pd
 import pymysql as pymysql
@@ -22,7 +23,7 @@ def run():
     predictDays = 30
     # for i in range(len(codes)):
     #     predict(conn, codes[i], predictDays)
-    predict(conn, '002174', 10)
+    predict(conn, '000725', 10)
     conn.close()
     endTime = datetime.datetime.now()
     print('end time: {}'.format(endTime))
@@ -54,9 +55,9 @@ def predict(conn, code, predictDays):
     for j in range(lr.coef_.size):
         lastPrice = lastPrice + \
                     df.values[len(origDf) - predictDays - 1][j] * lr.coef_[0][j]
-    print('{} predict price from human calculation: {}'.format(origDf.values[len(origDf) - predictDays][1],
+    print('{} predict price from human calculation: {}'.format(origDf.loc[len(origDf) - predictDays, 'dateTime'],
                                                                lastPrice + c))
-    print('{} predict price from machine calculation: {}'.format(origDf.values[len(origDf) - predictDays][1],
+    print('{} predict price from machine calculation: {}'.format(origDf.loc[len(origDf) - predictDays, 'dateTime'],
                                                                  predictOfTestY[len(predictOfTestY) - 1][0]))
     predictDf = pd.DataFrame()
     realDf = pd.DataFrame()
@@ -65,27 +66,27 @@ def predict(conn, code, predictDays):
         for j in range(lr.coef_.size):
             predictPrice = predictPrice + \
                            df.values[len(origDf) - predictDays + i][j] * lr.coef_[0][j]
-            predictDf.loc[i, 'date'] = origDf.values[len(origDf) - predictDays + i, 1][5:]
-            predictDf.loc[i, 'predictEndPrice'] = origDf.values[len(origDf) - predictDays + i, 5]
-            realDf.loc[i, 'date'] = origDf.values[len(origDf) - predictDays + i, 1][5:]
-            realDf.loc[i, 'realEndPrice'] = origDf.values[len(origDf) - predictDays + i, 5]
+            predictDf.loc[i, 'date'] = origDf.loc[len(origDf) - predictDays + i, 'dateTime'][5:]
+            predictDf.loc[i, 'predictEndPrice'] = origDf.loc[len(origDf) - predictDays + i, 'endPrice']
+            realDf.loc[i, 'date'] = origDf.loc[len(origDf) - predictDays + i, 'dateTime'][5:]
+            realDf.loc[i, 'realEndPrice'] = origDf.loc[len(origDf) - predictDays + i, 'endPrice']
             predictDf.loc[i + predictDays, 'date'] = 'Day ' + str(i + 1)
             predictDf.loc[i + predictDays, 'predictEndPrice'] = predictPrice + c
         print('stock {} {}, predict day {} price: {}'.format(code, origDf[['stockName']].values[0][0], i + 1,
                                                              predictPrice + c))
+    predictDf = predictDf.sort_index(ascending=True)
     draw(code, origDf, predictDf, realDf)
 
 
 def draw(code, origDf, predictDf, realDf):
-    predictDf = predictDf.sort_index(ascending=True)
     ax = plt.gca()
     predictDf.plot(kind='line', x='date', y='predictEndPrice', color='red', ax=ax)
     realDf.plot(kind='line', x='date', y='realEndPrice', color='blue', ax=ax)
     font_set = FontProperties(fname=r"/System/Library/Fonts/STHeiti Medium.ttc", size=10)
     plt.title(code + ' ' + origDf[['stockName']].values[0][0], fontproperties=font_set)
     major_index = predictDf.index[predictDf.index % 1 == 0]
-    major_xtics = predictDf['date'][predictDf.index % 1 == 0]
-    plt.xticks(major_index, major_xtics)
+    major_xticks = predictDf['date'][predictDf.index % 1 == 0]
+    plt.xticks(major_index, major_xticks)
     plt.setp(plt.gca().get_xticklabels(), rotation=30)
     plt.grid(linestyle='dotted')
     plt.show()
@@ -94,4 +95,5 @@ def draw(code, origDf, predictDf, realDf):
 try:
     run()
 except Exception as e:
+    logging.exception(e)
     print(str(e))
