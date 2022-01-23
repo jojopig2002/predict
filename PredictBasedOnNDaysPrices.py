@@ -5,13 +5,14 @@ from sklearn.model_selection import train_test_split
 from PredictBaseModel import PredictBaseModel
 
 
-class PredictBasedOnNDays(PredictBaseModel):
-    def __init__(self, conn, code, basedOnDays, daysDisplayedInChart, xStep):
+class PredictBasedOnNDaysPrices(PredictBaseModel):
+    def __init__(self, conn, code, basedOnDays, daysDisplayedInChart, xStep, predictDays):
         self.conn = conn
         self.code = code
         self.basedOnDays = basedOnDays
         self.daysDisplayedInChart = daysDisplayedInChart
         self.xStep = xStep
+        self.predictDays = predictDays
 
     def predict(self):
         origDf = pd.read_sql('select * from s_' + self.code + ' order by dateTime asc', self.conn)
@@ -35,13 +36,12 @@ class PredictBasedOnNDays(PredictBaseModel):
         train_x, test_x, train_y, test_y = train_test_split(x, y, test_size=0.2, shuffle=False)
         lr = LinearRegression(normalize=False, positive=True)
         lr.fit(train_x, train_y)
-        print('coef: {}'.format(lr.coef_))
-        print('intercept: {}'.format(lr.intercept_))
         predictOfTestY = lr.predict(test_x)
         predictDf = pd.DataFrame()
         realDf = pd.DataFrame()
         index = 0
         j = self.daysDisplayedInChart - 1
+        # print predicted data vs actual data based on test data set
         for i in range(self.daysDisplayedInChart - 1, -1, -1):
             realDf.loc[index, 'realEndPrice'] = float(dataDf.loc[i, 'endPrice'])
             realDf.loc[index, 'date'] = dataDf.loc[i, 'dateTime']
@@ -53,12 +53,33 @@ class PredictBasedOnNDays(PredictBaseModel):
                 predictVal = 0
                 for m in range(lr.coef_.size):
                     predictVal = predictVal + test_x[len(predictOfTestY) - 1 - j + 1][m] * lr.coef_[0][m]
-                print('predicted by human: {}'.format(predictVal + lr.intercept_))
+                print('predicted by human: {}'.format(predictVal + lr.intercept_[0]))
                 print('actual: {}'.format(realDf.loc[index, 'realEndPrice']))
                 if index >= 1:
                     print(
                         'diff: {}'.format(predictDf.loc[index, 'predictEndPrice'] - realDf.loc[index, 'realEndPrice']))
                 predictDf.loc[index, 'date'] = dataDf.loc[i, 'dateTime']
             j -= 1
+            index += 1
+        print('coef: {}'.format(lr.coef_))
+        print('intercept: {}'.format(lr.intercept_))
+
+        # do predict
+        priceList = []
+        for i in range(1, self.basedOnDays):
+            priceList.append(test_x[len(test_x) - 1][i])
+        priceList.append(test_y[len(test_y) - 1][0])
+        count = 0
+        while count < self.predictDays:
+            predictVal = 0
+            j = count
+            for i in range(lr.coef_.size):
+                predictVal = predictVal + lr.coef_[0][i] * priceList[j]
+                j += 1
+            predictVal += lr.intercept_[0]
+            priceList.append(predictVal)
+            predictDf.loc[index, 'predictEndPrice'] = predictVal
+            predictDf.loc[index, 'date'] = 'day ' + str(count + 1)
+            count += 1
             index += 1
         self.draw(self.code, origDf, predictDf, realDf, self.xStep, 'Based on ' + str(self.basedOnDays) + ' days')

@@ -5,8 +5,8 @@ import logging
 
 import pymysql as pymysql
 
-from PredictBasedOnNDays import PredictBasedOnNDays
-from PredictBasedOnOneDay import PredictBasedOnOneDay
+from PredictBasedOnNDaysPrices import PredictBasedOnNDaysPrices
+from PredictBasedOnOneDayFactors import PredictBasedOnOneDayFactors
 
 
 def run():
@@ -17,9 +17,10 @@ def run():
     startTime = datetime.datetime.now()
     print('start time: {}'.format(startTime))
     conn = pymysql.connect(host=host, user=user, password=password, db=dbname)
-    codes = ['002174', '002460', '300122', '000725', '000100', '002047', '002699', '000665', '600847', '605289']
-    # PredictBasedOnOneDay(conn, '002174', daysBeforePredictDay=5, daysDisplayedInChart=200, xStep=5).predict()
-    PredictBasedOnNDays(conn, '002174', basedOnDays=15, daysDisplayedInChart=200, xStep=5).predict()
+    codes = ['002174', '002460', '300122', '002007', '002250', '601888', '601012', '002978', '605066', '603225']
+    # PredictBasedOnOneDayFactors(conn, '002174', daysBeforePredictDay=5, daysDisplayedInChart=200, xStep=5).predict()
+    PredictBasedOnNDaysPrices(conn, '603225', basedOnDays=10, daysDisplayedInChart=200, xStep=5,
+                              predictDays=5).predict()
     conn.close()
     endTime = datetime.datetime.now()
     print('end time: {}'.format(endTime))

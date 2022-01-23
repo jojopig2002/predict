@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from PredictBaseModel import PredictBaseModel
 
 
-class PredictBasedOnOneDay(PredictBaseModel):
+class PredictBasedOnOneDayFactors(PredictBaseModel):
     def __init__(self, conn, code, daysBeforePredictDay, daysDisplayedInChart, xStep):
         self.conn = conn
         self.code = code
