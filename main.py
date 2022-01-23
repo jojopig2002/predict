@@ -19,7 +19,7 @@ def run():
     conn = pymysql.connect(host=host, user=user, password=password, db=dbname)
     codes = ['002174', '002460', '300122', '000725', '000100', '002047', '002699', '000665', '600847', '605289']
     # PredictBasedOnOneDay(conn, '002174', daysBeforePredictDay=5, daysDisplayedInChart=200, xStep=5).predict()
-    PredictBasedOnNDays(conn, '002174', basedOnDays=5, daysDisplayedInChart=200, xStep=5).predict()
+    PredictBasedOnNDays(conn, '002174', basedOnDays=15, daysDisplayedInChart=200, xStep=5).predict()
     conn.close()
     endTime = datetime.datetime.now()
     print('end time: {}'.format(endTime))

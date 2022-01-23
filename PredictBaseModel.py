@@ -12,8 +12,8 @@ class PredictBaseModel:
             realDf.plot(kind='line', x='date', y='realEndPrice', color='blue', ax=ax)
             font_set = FontProperties(fname=r"/System/Library/Fonts/STHeiti Medium.ttc", size=10)
             plt.title(titlePart + ': ' + code + ' ' + origDf[['stockName']].values[0][0], fontproperties=font_set)
-            major_index = predictDf.index[predictDf.index % step == 0]
-            major_xticks = predictDf['date'][predictDf.index % step == 0]
+            major_index = realDf.index[realDf.index % step == 0]
+            major_xticks = realDf['date'][realDf.index % step == 0]
             plt.xticks(major_index, major_xticks)
             plt.setp(plt.gca().get_xticklabels(), rotation=30)
             plt.grid(linestyle='dotted')

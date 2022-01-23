@@ -46,17 +46,19 @@ class PredictBasedOnNDays(PredictBaseModel):
             realDf.loc[index, 'realEndPrice'] = float(dataDf.loc[i, 'endPrice'])
             realDf.loc[index, 'date'] = dataDf.loc[i, 'dateTime']
             print('date: {}'.format(dataDf.loc[i, 'dateTime']))
-            predictDf.loc[index, 'predictEndPrice'] = round(float(predictOfTestY[len(predictOfTestY) - 1 - j][0]), 2)
-            print('predicted by machine: {}'.format(predictDf.loc[index, 'predictEndPrice']))
-            predictVal = 0
-            for m in range(lr.coef_.size):
-                predictVal = predictVal + test_x[len(predictOfTestY) - 1 - j][m] * lr.coef_[0][m]
-            print('predicted by human: {}'.format(predictVal + lr.intercept_))
-            print('actual: {}'.format(realDf.loc[index, 'realEndPrice']))
-            if index >= 1:
-                print(
-                    'diff: {}'.format(predictDf.loc[index, 'predictEndPrice'] - realDf.loc[index - 1, 'realEndPrice']))
-            predictDf.loc[index, 'date'] = dataDf.loc[i, 'dateTime']
+            if len(predictOfTestY) - 1 - j + 1 <= len(predictOfTestY) - 1:
+                predictDf.loc[index, 'predictEndPrice'] = round(
+                    float(predictOfTestY[len(predictOfTestY) - 1 - j + 1][0]), 2)
+                print('predicted by machine: {}'.format(predictDf.loc[index, 'predictEndPrice']))
+                predictVal = 0
+                for m in range(lr.coef_.size):
+                    predictVal = predictVal + test_x[len(predictOfTestY) - 1 - j + 1][m] * lr.coef_[0][m]
+                print('predicted by human: {}'.format(predictVal + lr.intercept_))
+                print('actual: {}'.format(realDf.loc[index, 'realEndPrice']))
+                if index >= 1:
+                    print(
+                        'diff: {}'.format(predictDf.loc[index, 'predictEndPrice'] - realDf.loc[index, 'realEndPrice']))
+                predictDf.loc[index, 'date'] = dataDf.loc[i, 'dateTime']
             j -= 1
             index += 1
         self.draw(self.code, origDf, predictDf, realDf, self.xStep, 'Based on ' + str(self.basedOnDays) + ' days')
